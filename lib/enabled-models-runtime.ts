@@ -55,6 +55,11 @@ export async function resolvePatternMatches(
       // treat it as matching nothing so it is preserved verbatim.
       scopedModels = [];
     }
+    // pi 1.3 resolves a bare id shared by several providers to all of them;
+    // the panel still shows a single owner, as it did with pi 1.2.
+    if (!/[/*?[]/.test(pattern.split(":")[0]) && scopedModels.length > 1) {
+      scopedModels = scopedModels.slice(0, 1);
+    }
     const pin = scopedModels.find((scoped) => scoped.thinkingLevel)?.thinkingLevel;
     resolutions.push({
       pattern,
