@@ -35,6 +35,7 @@ import { useFontPreferences } from "@/hooks/useFontPreferences";
 import type { ToolPreset } from "@/lib/tool-presets";
 import { SelectorRow } from "./SelectorRow";
 import { ModelSelector, type ModelSelectorOption } from "./ModelSelector";
+import { ApprovalModeSelector } from "./ApprovalModeSelector";
 
 export { filterModelOptions } from "./ModelSelector";
 
@@ -2473,6 +2474,7 @@ export const ChatInput = memo(forwardRef<ChatInputHandle, Props>(function ChatIn
                 onSetDefault={onSetDefaultModel}
               />
             )}
+            <ApprovalModeSelector showLabel={!isMobile} />
           </div>
 
           {/* spacer */}
