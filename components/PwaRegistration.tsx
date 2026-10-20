@@ -9,7 +9,8 @@ export function PwaRegistration() {
     }
 
     const register = () => {
-      const appVersion = process.env.NEXT_PUBLIC_APP_VERSION ?? "dev";
+      // fork: the suffix renews the icon cache after the fork's icon change.
+      const appVersion = `${process.env.NEXT_PUBLIC_APP_VERSION ?? "dev"}-sci4fred`;
       const scriptUrl = `/sw.js?v=${encodeURIComponent(appVersion)}`;
 
       void navigator.serviceWorker.register(scriptUrl, {
