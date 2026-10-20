@@ -1953,6 +1953,16 @@ export function useAgentSession(opts: UseAgentSessionOptions) {
     }
   }, [isNew, newSessionCwd, newSessionModel, session, ensureNewSession, ensureEventsConnected, promoteNewSession, waitForPromptSettlement, addNotice, cancelEventStreamGrace, closeEvents, composerDraftKey, dispatch, reconcileAgentState, restoreSubmission, editEntryId, setEdit]);
 
+  // fork: resend a past user message as a new branch from the same point.
+  const handleRerun = useCallback(async (entryId: string, message: string, images?: AttachedImage[]) => {
+    if (agentRunningRef.current || bashRunningRef.current || editEntryId) return;
+    if (!(await handleNavigateRef.current?.(entryId))) {
+      addNotice({ type: "error", message: "Unable to rerun this message" });
+      return;
+    }
+    await handleSend(message, images);
+  }, [addNotice, editEntryId, handleSend]);
+
   const executeBash = useCallback(async (command: string, excludeFromContext: boolean) => {
     if (agentRunningRef.current || bashRunningRef.current) return;
     const inputText = `${excludeFromContext ? "!!" : "!"}${command}`;
@@ -2943,6 +2953,7 @@ export function useAgentSession(opts: UseAgentSessionOptions) {
     handleRecallQueue,
     handleBuiltinSlashCommand,
     handleEditContent,
+    handleRerun,
     // Present only while a history edit is pending.
     cancelEdit: editEntryId ? cancelEdit : undefined,
     addNotice,

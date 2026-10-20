@@ -207,6 +207,7 @@ interface Props {
   onCancelEdit?: () => void;
   isEditing?: boolean;
   onSubmitEdit?: (message: string, images?: EditImage[]) => void;
+  onRerun?: (entryId: string, message: string, images?: EditImage[]) => void;
   showTimestamp?: boolean;
   prevTimestamp?: number;
   sessionId?: string;
@@ -289,9 +290,9 @@ function haveSameRelevantToolResults(
   return true;
 }
 
-export const MessageView = memo(function MessageView({ message, isStreaming, toolResults, modelNames, cwd, onOpenFile, onOpenSubagent, entryId, searchBlock, onFork, forking, onEditContent, onCancelEdit, isEditing, onSubmitEdit, showTimestamp, prevTimestamp, sessionId, writtenFiles, turnDurationMs, onCompact, isCompacting, compactError }: Props) {
+export const MessageView = memo(function MessageView({ message, isStreaming, toolResults, modelNames, cwd, onOpenFile, onOpenSubagent, entryId, searchBlock, onFork, forking, onEditContent, onCancelEdit, isEditing, onSubmitEdit, onRerun, showTimestamp, prevTimestamp, sessionId, writtenFiles, turnDurationMs, onCompact, isCompacting, compactError }: Props) {
   if (message.role === "user") {
-    return <UserMessageView message={message as UserMessage} cwd={cwd} onOpenFile={onOpenFile} entryId={entryId} onFork={onFork} forking={forking} onEditContent={onEditContent} onCancelEdit={onCancelEdit} isEditing={isEditing} onSubmitEdit={onSubmitEdit} />;
+    return <UserMessageView message={message as UserMessage} cwd={cwd} onOpenFile={onOpenFile} entryId={entryId} onFork={onFork} forking={forking} onEditContent={onEditContent} onCancelEdit={onCancelEdit} isEditing={isEditing} onSubmitEdit={onSubmitEdit} onRerun={onRerun} />;
   }
   if (message.role === "assistant") {
     return <AssistantMessageView message={message as AssistantMessage} isStreaming={isStreaming} toolResults={toolResults} modelNames={modelNames} cwd={cwd} onOpenFile={onOpenFile} onOpenSubagent={onOpenSubagent} showTimestamp={showTimestamp} prevTimestamp={prevTimestamp} sessionId={sessionId} entryId={entryId} searchBlock={searchBlock} writtenFiles={writtenFiles} turnDurationMs={turnDurationMs} onCompact={onCompact} isCompacting={isCompacting} compactError={compactError} />;
@@ -326,6 +327,7 @@ export const MessageView = memo(function MessageView({ message, isStreaming, too
     && prev.onCancelEdit === next.onCancelEdit
     && prev.isEditing === next.isEditing
     && prev.onSubmitEdit === next.onSubmitEdit
+    && prev.onRerun === next.onRerun
     && prev.showTimestamp === next.showTimestamp
     && prev.prevTimestamp === next.prevTimestamp
     && prev.writtenFiles === next.writtenFiles
@@ -336,7 +338,7 @@ export const MessageView = memo(function MessageView({ message, isStreaming, too
     && prev.compactError === next.compactError;
 });
 
-function UserMessageView({ message, cwd, onOpenFile, entryId, onFork, forking, onEditContent, onCancelEdit, isEditing, onSubmitEdit }: {
+function UserMessageView({ message, cwd, onOpenFile, entryId, onFork, forking, onEditContent, onCancelEdit, isEditing, onSubmitEdit, onRerun }: {
   message: UserMessage;
   cwd?: string;
   onOpenFile?: (filePath: string, page?: number) => void;
@@ -347,6 +349,7 @@ function UserMessageView({ message, cwd, onOpenFile, entryId, onFork, forking, o
   onCancelEdit?: () => void;
   isEditing?: boolean;
   onSubmitEdit?: (message: string, images?: EditImage[]) => void;
+  onRerun?: (entryId: string, message: string, images?: EditImage[]) => void;
 }) {
   const { t } = useI18n();
   const [hovered, setHovered] = useState(false);
@@ -412,6 +415,7 @@ function UserMessageView({ message, cwd, onOpenFile, entryId, onFork, forking, o
   );
   const canEdit = !!entryId && !!onEditContent;
   const canCancelEdit = !!isEditing && !!onCancelEdit;
+  const canRerun = !!entryId && !!onRerun && !canCancelEdit;
 
   const copyContent = () => {
     copyText(copyTarget).then(() => {
@@ -566,7 +570,7 @@ function UserMessageView({ message, cwd, onOpenFile, entryId, onFork, forking, o
                {copied ? t("i18n.copied") : t("i18n.copy")}
             </button>
           </div>
-          {(canFork || canEdit || canCancelEdit) && (
+          {(canFork || canEdit || canCancelEdit || canRerun) && (
             <div style={{
               display: "flex", gap: 3,
               opacity: (hovered || forking || canCancelEdit) ? 1 : 0,
@@ -596,6 +600,35 @@ function UserMessageView({ message, cwd, onOpenFile, entryId, onFork, forking, o
                     <path d="M4 4v7a4 4 0 0 0 4 4h12" />
                   </svg>
                    {t("i18n.editFromHere")}
+                </button>
+              )}
+              {canRerun && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const images = imageBlocks.map(toEditImage).filter((image): image is EditImage => image !== null);
+                    onRerun!(entryId!, copyTarget, images.length ? images : undefined);
+                  }}
+                  title={t("i18n.rerunTitle")}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 4,
+                    padding: "3px 8px", height: 22,
+                    background: "none", border: "none",
+                    borderRadius: 5,
+                    color: "var(--text-dim)",
+                    cursor: "pointer",
+                    fontSize: 11, fontWeight: 400,
+                    whiteSpace: "nowrap",
+                    transition: "color 0.12s",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "var(--accent)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-dim)"; }}
+                >
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <polyline points="1 4 1 10 7 10" />
+                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+                  </svg>
+                  {t("i18n.rerun")}
                 </button>
               )}
               {canCancelEdit && (

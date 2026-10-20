@@ -1464,6 +1464,8 @@ export const zhTWLocale: LocalePlugin = {
     "i18n.copyMessage": "複製訊息",
     "i18n.editFromHere": "從此處編輯",
     "i18n.editFromHereTitle": "從此處編輯，並在這個工作階段中建立分支",
+    "i18n.rerun": "重新執行",
+    "i18n.rerunTitle": "重新執行這則訊息，並在這個工作階段中建立分支",
     "i18n.newSession": "新增工作階段",
     "i18n.newSessionTitle": "新增工作階段，從此處建立獨立副本",
     "i18n.estimatedTokens": "串流輸出期間的估算 Token 數",

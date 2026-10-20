@@ -1464,6 +1464,8 @@ export const enLocale: LocalePlugin = {
     "i18n.copyMessage": "Copy message",
     "i18n.editFromHere": "Edit from here",
     "i18n.editFromHereTitle": "Edit from here — branches within this session",
+    "i18n.rerun": "Rerun",
+    "i18n.rerunTitle": "Rerun this message — branches within this session",
     "i18n.newSession": "New session",
     "i18n.newSessionTitle": "New session — creates an independent copy from here",
     "i18n.estimatedTokens": "Estimated token count while streaming",

@@ -293,7 +293,7 @@ export function ChatWindow({ session, searchTarget, onSearchTargetHandled, initi
     showScrollToBottom,
     sessionIdRef, scrollContainerRef,
     lastUserMsgRef, promptAnchorActive,
-    handleSend, handleAbort, handleFork, handleEditContent, cancelEdit, handleModelChange,
+    handleSend, handleAbort, handleFork, handleEditContent, handleRerun, cancelEdit, handleModelChange,
     handleCompact, handleSteer, handleFollowUp, handlePromptWithStreamingBehavior, handleAbortCompaction,
     dismissCompactError,
     handleRecallQueue,
@@ -1162,6 +1162,7 @@ export function ChatWindow({ session, searchTarget, onSearchTargetHandled, initi
                     onCancelEdit={cancelEdit}
                     isEditing={editEntryId === entryIds[idx]}
                     onSubmitEdit={handleSend}
+                    onRerun={sessionBusy || isNew || editEntryId ? undefined : handleRerun}
                     showTimestamp={showTimestamp}
                     prevTimestamp={idx > 0 ? (messages[idx - 1] as AgentMessage & { timestamp?: number }).timestamp : undefined}
                     sessionId={session?.id ?? sessionIdRef.current ?? undefined}
