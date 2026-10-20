@@ -2,10 +2,44 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
-import { copyText } from "@/lib/clipboard";
 import { SelectorRow } from "./SelectorRow";
 
 // fork: top-bar "share" menu — copy a local link or the conversation as Markdown.
+
+function legacyCopy(text: string): void {
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.setAttribute("readonly", "");
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  const ok = document.execCommand("copy");
+  document.body.removeChild(ta);
+  if (!ok) throw new Error("Clipboard is not available");
+}
+
+/**
+ * Copies text that may still be loading. Handing the clipboard a pending
+ * ClipboardItem keeps the click's user activation, which Safari needs.
+ */
+async function copyPending(text: Promise<string>): Promise<void> {
+  if (typeof ClipboardItem !== "undefined" && navigator.clipboard?.write) {
+    try {
+      const blob = text.then((value) => new Blob([value], { type: "text/plain" }));
+      await navigator.clipboard.write([new ClipboardItem({ "text/plain": blob })]);
+      return;
+    } catch {
+      // Fall through to writeText / execCommand.
+    }
+  }
+  const value = await text;
+  try {
+    await navigator.clipboard.writeText(value);
+  } catch {
+    legacyCopy(value);
+  }
+}
 
 type Status = { kind: "idle" } | { kind: "busy" } | { kind: "done"; label: string } | { kind: "error"; message: string };
 
@@ -49,7 +83,7 @@ export function ShareSessionButton({ sessionId, leafId, mobile, buttonStyle, tra
     if (!sessionId) return;
     const url = new URL(window.location.origin);
     url.searchParams.set("session", sessionId);
-    await copyText(url.toString());
+    await copyPending(Promise.resolve(url.toString()));
     setStatus({ kind: "done", label: translate("share.linkCopied") });
   };
 
@@ -57,9 +91,12 @@ export function ShareSessionButton({ sessionId, leafId, mobile, buttonStyle, tra
     if (!sessionId) return;
     setStatus({ kind: "busy" });
     const params = leafId ? `?leafId=${encodeURIComponent(leafId)}` : "";
-    const res = await fetch(`/api/sessions/${encodeURIComponent(sessionId)}/markdown${params}`, { cache: "no-store" });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    await copyText(await res.text());
+    const markdown = fetch(`/api/sessions/${encodeURIComponent(sessionId)}/markdown${params}`, { cache: "no-store" })
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.text();
+      });
+    await copyPending(markdown);
     setStatus({ kind: "done", label: translate("share.markdownCopied") });
   };
 
