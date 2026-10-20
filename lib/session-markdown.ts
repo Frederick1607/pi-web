@@ -23,7 +23,7 @@ function fence(text: string, lang = ""): string {
 function summarizeToolInput(input: unknown): string {
   if (!input || typeof input !== "object") return "";
   const record = input as Record<string, unknown>;
-  for (const key of ["command", "path", "file_path", "pattern", "url", "query"]) {
+  for (const key of ["command", "code", "path", "file_path", "pattern", "url", "query"]) {
     if (typeof record[key] === "string") return record[key] as string;
   }
   return JSON.stringify(input);
@@ -45,7 +45,7 @@ function messageToMarkdown(message: AgentMessage): string | null {
         if (block.type === "text" && block.text?.trim()) parts.push(block.text.trim());
         else if (block.type === "toolCall") {
           const summary = summarizeToolInput(block.input);
-          parts.push(`**🔧 ${block.toolName}**${summary ? `\n\n${fence(truncate(summary), block.toolName === "bash" ? "bash" : "")}` : ""}`);
+          parts.push(`**🔧 ${block.toolName}**${summary ? `\n\n${fence(truncate(summary), block.toolName === "bash" ? "bash" : block.toolName === "codemode" ? "js" : "")}` : ""}`);
         }
       }
       if (message.errorMessage) parts.push(`> ⚠️ ${message.errorMessage}`);
@@ -80,7 +80,7 @@ export function sessionToMarkdown(
 ): string {
   const { messages } = buildSessionContext(entries, options.leafId ?? undefined);
   const header = [`# ${options.title?.trim() || "Pi session"}`];
-  if (options.cwd) header.push(`\n_${options.cwd}_`);
+  if (options.cwd) header.push(`\n\n_${options.cwd}_`);
   const body = messages.map(messageToMarkdown).filter((part): part is string => Boolean(part));
   return `${header.join("")}\n\n${body.join("\n\n---\n\n")}\n`;
 }
