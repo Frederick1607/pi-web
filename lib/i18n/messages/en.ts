@@ -223,7 +223,7 @@ export const enLocale: LocalePlugin = {
     "share.markdown": "Copy as Markdown",
     "share.markdownDesc": "Current branch",
     "share.pathCopied": "Path copied",
-    "share.htmlCopied": "File link copied",
+    "share.htmlCopied": "HTML file path copied",
     "share.copying": "Copying…",
     "share.failed": "Copy failed",
     "title.generating": "Generating...",

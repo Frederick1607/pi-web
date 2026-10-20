@@ -223,7 +223,7 @@ export const zhTWLocale: LocalePlugin = {
     "share.markdown": "複製為 Markdown",
     "share.markdownDesc": "目前分支",
     "share.pathCopied": "路徑已複製",
-    "share.htmlCopied": "檔案連結已複製",
+    "share.htmlCopied": "HTML 檔案路徑已複製",
     "share.copying": "正在複製…",
     "share.failed": "複製失敗",
     "title.generating": "正在產生...",

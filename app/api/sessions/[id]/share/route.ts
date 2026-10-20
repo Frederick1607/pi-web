@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 // fork: POST /api/sessions/:id/share { kind: "path" | "html" }
 //   path — the session's .jsonl file
-//   html — exports the session to ~/Downloads/pi-sessions/ and returns its file:// URL
+//   html — exports the session to ~/Downloads/pi-sessions/ and returns the file path
 const EXPORT_DIR = join(homedir(), "Downloads", "pi-sessions");
 
 function exportFileName(filePath: string): string {
@@ -59,7 +59,7 @@ export async function POST(
     mkdirSync(EXPORT_DIR, { recursive: true });
     const outputPath = join(EXPORT_DIR, exportFileName(filePath));
     writeFileSync(outputPath, await exported.text(), "utf8");
-    return NextResponse.json({ text: pathToFileURL(outputPath).href, path: outputPath });
+    return NextResponse.json({ text: outputPath, url: pathToFileURL(outputPath).href });
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 });
   }
