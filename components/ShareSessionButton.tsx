@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { SelectorRow } from "./SelectorRow";
 
-// fork: top-bar "share" menu — copy a local link or the conversation as Markdown.
+// fork: top-bar "share" menu — copy the session file path, an exported HTML file, or Markdown.
 
 function legacyCopy(text: string): void {
   const ta = document.createElement("textarea");
@@ -79,12 +79,20 @@ export function ShareSessionButton({ sessionId, leafId, mobile, buttonStyle, tra
     return () => clearTimeout(timer);
   }, [status]);
 
-  const copyLink = async () => {
+  const copyShare = async (kind: "path" | "html") => {
     if (!sessionId) return;
-    const url = new URL(window.location.origin);
-    url.searchParams.set("session", sessionId);
-    await copyPending(Promise.resolve(url.toString()));
-    setStatus({ kind: "done", label: translate("share.linkCopied") });
+    setStatus({ kind: "busy" });
+    const text = fetch(`/api/sessions/${encodeURIComponent(sessionId)}/share`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kind }),
+    }).then(async (res) => {
+      const data = await res.json().catch(() => ({})) as { text?: string; error?: string };
+      if (!res.ok || !data.text) throw new Error(data.error ?? `HTTP ${res.status}`);
+      return data.text;
+    });
+    await copyPending(text);
+    setStatus({ kind: "done", label: translate(kind === "path" ? "share.pathCopied" : "share.htmlCopied") });
   };
 
   const copyMarkdown = async () => {
@@ -180,14 +188,16 @@ export function ShareSessionButton({ sessionId, leafId, mobile, buttonStyle, tra
             overflow: "hidden",
           }}
         >
-          <SelectorRow active={false} onSelect={() => run(copyLink)}>
-            <span style={{ flex: 1 }}>{translate("share.copyLink")}</span>
-            <span style={{ fontSize: 11, color: "var(--text-dim)", marginLeft: 8 }}>{translate("share.copyLinkDesc")}</span>
-          </SelectorRow>
-          <SelectorRow active={false} onSelect={() => run(copyMarkdown)}>
-            <span style={{ flex: 1 }}>{translate("share.copyMarkdown")}</span>
-            <span style={{ fontSize: 11, color: "var(--text-dim)", marginLeft: 8 }}>{translate("share.copyMarkdownDesc")}</span>
-          </SelectorRow>
+          {([
+            ["path", () => copyShare("path")],
+            ["html", () => copyShare("html")],
+            ["markdown", copyMarkdown],
+          ] as const).map(([key, action]) => (
+            <SelectorRow key={key} active={false} onSelect={() => run(action)}>
+              <span style={{ flex: 1 }}>{translate(`share.${key}`)}</span>
+              <span style={{ fontSize: 11, color: "var(--text-dim)", marginLeft: 8 }}>{translate(`share.${key}Desc`)}</span>
+            </SelectorRow>
+          ))}
         </div>,
         document.body,
       )}
