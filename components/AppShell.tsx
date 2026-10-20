@@ -1791,7 +1791,8 @@ export function AppShell() {
             hasSession
           />
         ))}
-        <button
+        {/* fork: system prompt button hidden */}
+        {false && <button
           ref={systemBtnRef}
           type="button"
           onClick={() => handleSystemInfoToggle("system", mobile)}
@@ -1828,7 +1829,7 @@ export function AppShell() {
             <line x1="8" y1="17" x2="13" y2="17" />
           </svg>
           {!mobile && <span>{translate("system.label")}</span>}
-        </button>
+        </button>}
         <button
           type="button"
           onClick={() => handleSystemInfoToggle("tools", mobile)}
