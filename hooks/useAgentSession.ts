@@ -623,11 +623,11 @@ export function useAgentSession(opts: UseAgentSessionOptions) {
     else pendingHistoryEdits.delete(session.id);
     setEditEntryId(entryId);
   }, [session?.id]);
-  const handleEditContent = useCallback((message: UserMessage, entryId: string) => {
+  // fork: the message is edited in place in its bubble, not in the composer.
+  const handleEditContent = useCallback((_message: UserMessage, entryId: string) => {
     if (!session?.id) return;
-    opts.chatInputRef?.current?.replaceMessage(message);
     setEdit(entryId);
-  }, [opts.chatInputRef, session?.id, setEdit]);
+  }, [session?.id, setEdit]);
   const cancelEdit = useCallback(() => setEdit(null), [setEdit]);
 
   const sessionStats = useMemo(() => {
